@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AOC气象信息导航</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* 基础样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #f4f4f4;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header .logo {
+            display: flex;
+            align-items: center;
+        }
+
+        .header .logo img {
+            width: 120px;
+            height: 50px;
+            margin-right: 10px;
+        }
+
+        .header .logo h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .search-box input {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+        }
+
+        .search-box .search-icons {
+            display: flex;
+            gap: 10px;
+            margin-left: 10px;
+        }
+
+        .search-box .search-icons i {
+            font-size: 20px;
+            color: #007BFF;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .search-box .search-icons i:hover {
+            color: #0056b3;
+        }
+
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .category {
+            flex: 1 1 calc(25% - 20px);
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .dark-mode .category {
+            background-color: #2d2d2d;
+            color: #f4f4f4;
+        }
+
+        .category h2 {
+            margin-top: 0;
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category h2 i {
+            font-size: 24px;
+            color: #007BFF;
+        }
+
+        .category ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .category ul li {
+            margin: 10px 0;
+        }
+
+        .category ul li a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .category ul li a:hover {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .category ul li a i {
+            font-size: 18px;
+        }
+
+        .dark-mode-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding: 20px;
+            text-align: center;
+            background-color: #f4f4f4;
+            border-top: 1px solid #ddd;
+            color: #666;
+        }
+
+        .dark-mode .footer {
+            background-color: #2d2d2d;
+            color: #f4f4f4;
+        }
+
+        /* 搜索建议框 */
+        .search-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .search-suggestions ul {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .search-suggestions ul li {
+            padding: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-suggestions ul li:hover {
+            background-color: #f0f0f0;
+        }
+
+        .search-suggestions ul li.highlighted {
+            background-color: #007BFF;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="https://www.sf-airlines.com/sfa/imagesWeb/logo_sc.png" alt="Logo">
+                <h1>AOC气象信息导航</h1>
+            </div>
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="输入关键词后回车搜索">
+                <div class="search-suggestions" id="search-suggestions">
+                    <ul></ul>
+                </div>
+                <div class="search-icons">
+                    <i class="fab fa-google" title="Google搜索" onclick="externalSearch('google')"></i>
+                    <i class="fab fa-bing" title="Bing搜索" onclick="externalSearch('bing')"></i>
+                    <i class="fab fa-baidu" title="百度搜索" onclick="externalSearch('baidu')"></i>
+<i class="fab fa-google" onclick="externalSearch('google')"></i>
+<i class="fab fa-bing" onclick="externalSearch('bing')"></i>
+<i class="fab fa-baidu" onclick="externalSearch('baidu')"></i>
+                </div>
+            </div>
+        </div>
+        <div class="categories">
+            <!-- 国内省市 -->
+            <div class="category">
+                <h2><i class="fas fa-city"></i>国内省市</h2>
+                <ul>
+                    <li><a href="http://www.bjmb.gov.cn/" target="_blank"><i class="fas fa-map-marker-alt"></i>北京气象局</a></li>
+                    <li><a href="http://www.shmb.gov.cn/" target="_blank"><i class="fas fa-map-marker-alt"></i>上海气象中心</a></li>
+                    <li><a href="http://www.grmc.gov.cn/" target="_blank"><i class="fas fa-map-marker-alt"></i>广州气象台</a></li>
+                    <li><a href="http://www.szmb.gov.cn/" target="_blank"><i class="fas fa-map-marker-alt"></i>深圳气象服务</a></li>
+                    <li><a href="http://www.cdmb.gov.cn/" target="_blank"><i class="fas fa-map-marker-alt"></i>成都气象站</a></li>
+                </ul>
+            </div>
+
+            <!-- 国际气象 -->
+            <div class="category">
+                <h2><i class="fas fa-globe-americas"></i>国际气象</h2>
+                <ul>
+                    <li><a href="https://www.noaa.gov/" target="_blank"><i class="fas fa-flag-usa"></i>NOAA（美国）</a></li>
+                    <li><a href="https://www.ecmwf.int/" target="_blank"><i class="fas fa-flag-eu"></i>ECMWF（欧洲）</a></li>
+                    <li><a href="https://www.jma.go.jp/" target="_blank"><i class="fas fa-flag-jp"></i>JMA（日本）</a></li>
+                    <li><a href="https://www.metoffice.gov.uk/" target="_blank"><i class="fas fa-flag-uk"></i>Met Office（英国）</a></li>
+                    <li><a href="http://www.bom.gov.au/" target="_blank"><i class="fas fa-flag-au"></i>BOM（澳大利亚）</a></li>
+                </ul>
+            </div>
+
+            <!-- 民航气象 -->
+            <div class="category">
+                <h2><i class="fas fa-plane-departure"></i>民航气象</h2>
+                <ul>
+                    <li><a href="https://www.aviationweather.gov/" target="_blank"><i class="fas fa-cloud-sun-rain"></i>航空气象预报</a></li>
+                    <li><a href="https://www.windy.com/" target="_blank"><i class="fas fa-wind"></i>高空风温预报</a></li>
+                    <li><a href="https://www.lightningmaps.org/" target="_blank"><i class="fas fa-bolt"></i>雷暴监测系统</a></li>
+                    <li><a href="https://www.aviationweather.gov/icing" target="_blank"><i class="fas fa-snowflake"></i>积冰预报系统</a></li>
+                    <li><a href="https://www.metar-taf.com/" target="_blank"><i class="fas fa-eye"></i>能见度监测</a></li>
+                </ul>
+            </div>
+
+            <!-- 台风追踪 -->
+            <div class="category">
+                <h2><i class="fas fa-wind"></i>台风追踪</h2>
+                <ul>
+                    <li><a href="https://typhoon.slt.zj.gov.cn/" target="_blank"><i class="fas fa-satellite"></i>实时台风路径</a></li>
+                    <li><a href="https://www.nhc.noaa.gov/" target="_blank"><i class="fas fa-wave-square"></i>风暴潮预报</a></li>
+                    <li><a href="https://www.typhoon.org.cn/" target="_blank"><i class="fas fa-exclamation-triangle"></i>台风预警系统</a></li>
+                    <li><a href="https://www.wunderground.com/hurricane" target="_blank"><i class="fas fa-water"></i>降水预报</a></li>
+                    <li><a href="https://www.ready.gov/hurricanes" target="_blank"><i class="fas fa-shield-alt"></i>防台应急指南</a></li>
+                </ul>
+            </div>
+
+            <!-- 卫星云图 -->
+            <div class="category">
+                <h2><i class="fas fa-satellite"></i>卫星云图</h2>
+                <ul>
+                    <li><a href="https://www.star.nesdis.noaa.gov/GOES/" target="_blank"><i class="fas fa-cloud"></i>GOES卫星云图</a></li>
+                    <li><a href="https://www.eumetsat.int/" target="_blank"><i class="fas fa-cloud"></i>EUMETSAT卫星云图</a></li>
+                    <li><a href="https://www.himawari8.nict.go.jp/" target="_blank"><i class="fas fa-cloud"></i>Himawari-8卫星云图</a></li>
+                </ul>
+            </div>
+
+            <!-- 天气雷达 -->
+            <div class="category">
+                <h2><i class="fas fa-satellite-dish"></i>天气雷达</h2>
+                <ul>
+                    <li><a href="https://radar.weather.gov/" target="_blank"><i class="fas fa-tachometer-alt"></i>美国天气雷达</a></li>
+                    <li><a href="https://www.bom.gov.au/australia/radar/" target="_blank"><i class="fas fa-tachometer-alt"></i>澳大利亚天气雷达</a></li>
+                    <li><a href="https://www.jma.go.jp/en/radar/" target="_blank"><i class="fas fa-tachometer-alt"></i>日本天气雷达</a></li>
+                </ul>
+            </div>
+
+            <!-- 数值预报 -->
+            <div class="category">
+                <h2><i class="fas fa-chart-line"></i>数值预报</h2>
+                <ul>
+                    <li><a href="https://www.ncep.noaa.gov/" target="_blank"><i class="fas fa-chart-area"></i>NCEP数值预报</a></li>
+                    <li><a href="https://www.ecmwf.int/en/forecasts" target="_blank"><i class="fas fa-chart-area"></i>ECMWF数值预报</a></li>
+                    <li><a href="https://www.jma.go.jp/en/nwp/" target="_blank"><i class="fas fa-chart-area"></i>JMA数值预报</a></li>
+                </ul>
+            </div>
+
+            <!-- 火山灰 -->
+            <div class="category">
+                <h2><i class="fas fa-mountain"></i>火山灰</h2>
+                <ul>
+                    <li><a href="https://www.volcanodiscovery.com/" target="_blank"><i class="fas fa-fire"></i>全球火山活动</a></li>
+                    <li><a href="https://www.usgs.gov/natural-hazards/volcano-hazards" target="_blank"><i class="fas fa-fire"></i>USGS火山监测</a></li>
+                    <li><a href="https://www.avo.alaska.edu/" target="_blank"><i class="fas fa-fire"></i>阿拉斯加火山观测</a></li>
+                </ul>
+            </div>
+
+            <!-- 环境气象 -->
+            <div class="category">
+                <h2><i class="fas fa-leaf"></i>环境气象</h2>
+                <ul>
+                    <li><a href="https://www.epa.gov/" target="_blank"><i class="fas fa-tree"></i>美国环保署</a></li>
+                    <li><a href="https://www.eea.europa.eu/" target="_blank"><i class="fas fa-tree"></i>欧洲环境署</a></li>
+                    <li><a href="https://www.unenvironment.org/" target="_blank"><i class="fas fa-tree"></i>联合国环境署</a></li>
+                </ul>
+            </div>
+
+            <!-- 商业气象 -->
+            <div class="category">
+                <h2><i class="fas fa-chart-bar"></i>商业气象</h2>
+                <ul>
+                    <li><a href="https://www.accuweather.com/" target="_blank"><i class="fas fa-dollar-sign"></i>AccuWeather</a></li>
+                    <li><a href="https://www.weather.com/" target="_blank"><i class="fas fa-dollar-sign"></i>The Weather Channel</a></li>
+                    <li><a href="https://www.wunderground.com/" target="_blank"><i class="fas fa-dollar-sign"></i>Weather Underground</a></li>
+                </ul>
+            </div>
+
+            <!-- 民航工具 -->
+            <div class="category">
+                <h2><i class="fas fa-tools"></i>民航工具</h2>
+                <ul>
+                    <li><a href="https://www.skyvector.com/" target="_blank"><i class="fas fa-map"></i>SkyVector航图</a></li>
+                    <li><a href="https://www.flightradar24.com/" target="_blank"><i class="fas fa-plane"></i>FlightRadar24</a></li>
+                    <li><a href="https://www.airnav.com/" target="_blank"><i class="fas fa-plane"></i>AirNav航行情报</a></li>
+                </ul>
+            </div>
+
+            <!-- 顺丰常用网址 -->
+            <div class="category">
+                <h2><i class="fas fa-link"></i>顺丰常用网址</h2>
+                <ul>
+                    <li><a href="https://www.sf-express.com/" target="_blank"><i class="fas fa-box"></i>顺丰官网</a></li>
+                    <li><a href="https://www.sf-airlines.com/" target="_blank"><i class="fas fa-plane"></i>顺丰航空</a></li>
+                    <li><a href="https://www.sf-tech.com.cn/" target="_blank"><i class="fas fa-cogs"></i>顺丰科技</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>顺丰航空AOC气象信息导航 - 提供各类气象导航与索引服务</p>
+            <p>技术支持：崔云云 | 数据来源：各大气象机构</p>
+            <p>© 2025 顺丰航空. 保留所有权利.</p>
+        </div>
+    </div>
+
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+        <i class="fas fa-moon"></i>
+        <span class="tooltip">切换主题</span>
+    </button>
+
+    <script>
+        // 暗色模式切换
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.dark-mode-toggle');
+            btn.querySelector('i').classList.toggle('fa-sun');
+        }
+
+        // 检查本地存储中的主题设置
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.dark-mode-toggle i').classList.add('fa-sun');
+        }
+
+        // 切换主题并保存到本地存储
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.dark-mode-toggle');
+            btn.querySelector('i').classList.toggle('fa-sun');
+
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        }
+
+        // 动态识别导航页内容并生成搜索建议
+        const searchInput = document.getElementById('search-input');
+        const searchSuggestions = document.getElementById('search-suggestions');
+        const allLinks = document.querySelectorAll('.category ul li a');
+
+        searchInput.addEventListener('input', function () {
+            const query = this.value.trim().toLowerCase();
+            const suggestions = [];
+
+            if (query) {
+                allLinks.forEach(link => {
+                    const text = link.textContent.toLowerCase();
+                    if (text.includes(query)) {
+                        suggestions.push(`<li>${link.innerHTML}</li>`);
+                    }
+                });
+            }
+
+            if (suggestions.length > 0) {
+                searchSuggestions.querySelector('ul').innerHTML = suggestions.join('');
+                searchSuggestions.style.display = 'block';
+            } else {
+                searchSuggestions.style.display = 'none';
+            }
+        });
+
+       // 原点击事件替换为
+searchSuggestions.addEventListener('click', function (e) {
+    const li = e.target.closest('li');
+    if (li) {
+        searchInput.value = li.textContent.trim();
+        searchSuggestions.style.display = 'none';
+    }
+});
+
+        // 搜索引擎跳转（仅Bing）
+      function externalSearch(engine) { // 添加参数
+    const query = searchInput.value.trim();
+    if (!query) {
+        alert('请输入搜索内容');
+        return;
+    }
+    // 添加搜索引擎判断
+    const engines = {
+        google: `https://www.google.com/search?q=`,
+        bing: `https://www.bing.com/search?q=`,
+        baidu: `https://www.baidu.com/s?wd=`
+    };
+    window.open(`${engines[engine]}${encodeURIComponent(query)}`, '_blank');
+}
+
+        // 回车事件监听
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') externalSearch();
+        });
+
+        // 初始化工具提示
+        document.querySelectorAll('[title]').forEach(el => {
+            el.addEventListener('mouseover', function () {
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = this.title;
+                document.body.appendChild(tooltip);
+
+                const rect = this.getBoundingClientRect();
+                tooltip.style.left = `${rect.left + window.scrollX}px`;
+                tooltip.style.top = `${rect.bottom + window.scrollY + 5}px`;
+
+                this.addEventListener('mouseout', () => tooltip.remove());
+            });
+        });
+    </script>
+</body>
+</html>
